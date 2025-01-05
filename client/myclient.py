@@ -36,11 +36,11 @@ class Client:
         self.client             : socket           = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # 连接到服务端
         self.config             : Config           = None                   # 客户端配置文件
         self.no_cookie          : bool             = no_cookie              # 禁用cookie恢复
-        self.client_player      : int              = 0                      # 客户端用户标识
+        self.client_player      : int              = 0                      # 客户端用户标识，是所处位置吗？
         self.client_cards       : list[Card]       = []                     # 持有牌
         self.users_cards        : list[list[Card]] = [[] for _ in range(6)] # 所有用户的牌，用于最后游戏结束时展现寻找战犯
         self.is_player          : bool             = False                  # 玩家/旁观者
-        self.users_name         : list[str]        = ["" for _ in range(6)] # 用户名字
+        self.users_name         : list[str]        = ["" for _ in range(6)] # 用户名字，按照出牌顺序排序
         self.game_over          : int              = 0                      # 游戏结束标志，非0代表已经结束
         self.now_score          : int              = 0                      # 场上的分数
         self.now_player         : int              = 0                      # 当前的玩家

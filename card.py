@@ -1,10 +1,10 @@
 from enum import Enum
 
 class Suits(Enum): # 花色
-    spade   = "spade" # 黑桃
-    heart   = "heart" # 红心
-    club    = "club" # 梅花
-    diamond = "diamond" # 方块
+    spade   = "Spade" # 黑桃
+    heart   = "Heart" # 红心
+    club    = "Club" # 梅花
+    diamond = "Diamond" # 方块
     empty   = "" # 空，大小王没有花色
 
 class Card:

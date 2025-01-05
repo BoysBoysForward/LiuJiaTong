@@ -162,9 +162,11 @@ def gen_player_field_paragraph(
     player_name = Sentence()
     player_name.minwidth = name_maxlen
     set_color(player_name)
+
     # 如果该玩家已经逃出，则将其名字打上删除线
     if num_of_cards == 0:
         player_name.strikethrough = True
+
     # 如果该玩家现在在打牌，则将其名字闪烁显示并加上*
     if is_current_player:
         player_name.blink = True
@@ -200,7 +202,7 @@ def main_interface(
     is_start,
     is_player,
     client_cards,
-    client_player,
+    client_player: int, # 当前玩家的ID
     # 场面信息
     users_name,
     users_score,
@@ -282,7 +284,7 @@ def main_interface(
     if INTERFACE_TYPE == "CLI":
         print_article(article, th) # 打印
     else:
-        update_gui(client_cards)
+        update_gui(client_player, users_name, client_cards)
 
     _play_sound(
         is_start=is_start,
