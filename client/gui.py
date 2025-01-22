@@ -107,7 +107,7 @@ def on_my_card_click(event):
     for i in range(len(gui_obj.my_card_labels)):
         if gui_obj.my_card_labels[i] != label:
             continue
-        
+
         if gui_obj.selected_card_flag[i]:
             # 将Label向下移动20个单位
             new_y = current_y + 20
@@ -198,3 +198,22 @@ def draw_user_names():
     label4.place(x=20, y=DEFAULT_WINDOW_HEIGHT / 4, anchor='nw')
     label5 = tk.Label(gui_obj.root, text=gui_obj.field_info.user_names[(gui_obj.field_info.client_id + 5) % 6], font=("Arial", 20))
     label5.place(x=20, y=DEFAULT_WINDOW_HEIGHT / 2, anchor='nw')
+
+def draw_buttons():
+    reset_button = tk.Button(gui_obj.root, text="Click Me", command=on_reset_button_click)
+    reset_button.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT - 150)
+
+    confirm_button = tk.Button(gui_obj.root, text="Confirm", command=on_confirm_button_click)
+    confirm_button.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT - 100)
+
+    skip_button = tk.Button(gui_obj.root, text="Skip", command=on_skip_button_click)
+    skip_button.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT - 50)
+    
+def on_reset_button_click():
+    pass
+
+def on_confirm_button_click():
+    pass
+
+def on_skip_button_click():
+    pass
