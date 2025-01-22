@@ -6,22 +6,21 @@ from PIL import Image, ImageTk
 
 import logger
 from card import Card, Suits
+from FieldInfo import FieldInfo
 import utils
 
 # users_name = []
 # my_cards = []
+DEFAULT_WINDOW_WIDTH = 1440
+DEFAULT_WINDOW_HEIGHT = 810
 
-def update_gui(identity: int, names: list[str], client_cards: list[Card]):
+def update_gui(info: FieldInfo):
     logger.info("update gui")
-    global client_id
-    client_id = identity
-    global users_name
-    users_name = copy.deepcopy(names)
-    global my_cards
-    my_cards = copy.deepcopy(client_cards)
+    global field_info
+    field_info = copy.deepcopy(info)
     global root
     root.event_generate("<<UpdateEvent>>")
-    root.event_generate("<Configure>")
+    # root.event_generate("<Configure>")
 
 def on_resize(event):
     # 获取窗口的宽度
@@ -51,9 +50,9 @@ def init_gui():
         global root
         root = tk.Tk()
         root.title("LiuJiaTong")
-        root.geometry("1000x600")
+        root.geometry("1440x810")
         root.bind("<<UpdateEvent>>", handle_update_event)
-        root.bind('<Configure>', on_resize) # 绑定窗口大小变化事件
+        # root.bind('<Configure>', on_resize) # 绑定窗口大小变化事件
         root.mainloop()
 
     # 启动 GUI 线程
@@ -63,15 +62,8 @@ def init_gui():
 
 def handle_update_event(event):
     logger.info("handle update event")
-
     draw_user_names()
-
-    # Draw my cards
-    for i in range(len(my_cards)):
-        draw_one_card(my_cards[i], 115 + i * 20, 450)
-
-    # Draw other player cards with Background.png
-    draw_left_cards()
+    draw_user_cards()
 
 def card_to_photo(card: Card) -> ImageTk.PhotoImage:
     # 卡牌素材来源：https://gitcode.com/open-source-toolkit/77d38/?utm_source=tools_gitcode&index=bottom&type=card&
@@ -104,30 +96,76 @@ def grid_one_card(card: Card, row: int, column: int):
     label.image = photo
     label.grid(row=row, column=column)
 
+def draw_background(x: int, y: int, anchor: str='nw'):
+    image = Image.open("client/images/Background.png") # 打开图片
+
+    # 等比例缩小图片至高度为75像素
+    target_height = 100
+    width, height = image.size
+    scale = target_height / height
+    new_width = int(width * scale)
+    image = image.resize((new_width, target_height))
+
+    photo = ImageTk.PhotoImage(image)
+    label = tk.Label(root, image=photo) # 这里的image参数是必须指定的，与下一行不冲突
+    label.image = photo
+    label.place(x=x, y=y, anchor=anchor)
+    
+def draw_my_cards():
+    # Draw my cards
+    # 36张牌的宽度是71+35*20=771
+    for i in range(len(field_info.client_cards)):
+        draw_one_card(field_info.client_cards[i], (DEFAULT_WINDOW_WIDTH - 1121) / 2 + i * 30, DEFAULT_WINDOW_HEIGHT - 140)
+
 def draw_left_cards():
-    pass
+    # Draw other player cards with Background.png
+    left_text_1 = f"剩{field_info.users_cards_num[(field_info.client_id + 4) % 6]}张"
+    left_label_1 = tk.Label(root, text=left_text_1, font=("Arial", 20))
+    left_label_1.place(x=20, y=DEFAULT_WINDOW_HEIGHT / 4 + 40, anchor='nw')
+    draw_background(40, DEFAULT_WINDOW_HEIGHT / 4 + 80)
+    
+    left_text_2 = f"剩{field_info.users_cards_num[(field_info.client_id + 5) % 6]}张"
+    left_label_2 = tk.Label(root, text=left_text_2, font=("Arial", 20))
+    left_label_2.place(x=20, y=DEFAULT_WINDOW_HEIGHT / 2 + 40, anchor='nw')
+    draw_background(40, DEFAULT_WINDOW_HEIGHT / 2 + 80)
 
 def draw_right_cards():
-    pass
+    # Draw other player cards with Background.png
+    right_text_1 = f"剩{field_info.users_cards_num[(field_info.client_id + 1) % 6]}张"
+    right_label_1 = tk.Label(root, text=right_text_1, font=("Arial", 20))
+    right_label_1.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT / 4 + 40, anchor='ne')
+    draw_background(DEFAULT_WINDOW_WIDTH - 40, DEFAULT_WINDOW_HEIGHT / 4 + 80, "ne")
+    
+    right_text_2 = f"剩{field_info.users_cards_num[(field_info.client_id + 2) % 6]}张"
+    right_label_2 = tk.Label(root, text=right_text_2, font=("Arial", 20))
+    right_label_2.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT / 2 + 40, anchor='ne')
+    draw_background(DEFAULT_WINDOW_WIDTH - 40, DEFAULT_WINDOW_HEIGHT / 2 + 80, "ne")
 
 def draw_top_cards():
-    pass
+    print(f"Card num: {field_info.users_cards_num[(field_info.client_id + 3) % 6]}")
+    for i in range(field_info.users_cards_num[(field_info.client_id + 3) % 6]):
+        draw_background((DEFAULT_WINDOW_WIDTH - 1121) / 2 + i * 30, 40)
+
+def draw_user_cards():
+    draw_my_cards()
+    draw_left_cards()
+    draw_right_cards()
+    draw_top_cards()
 
 def draw_user_names():
+    global field_info
     print("draw user names")
-    global users_name
-    global client_id
+    print(field_info.user_names)
 
-    print(users_name)
     # 从下一个玩家开始绘制名字，两个右侧，一个顶部，两个左侧
     global label1, label2, label3, label4, label5
-    label1 = tk.Label(root, text=users_name[(client_id + 1) % 6], font=("Arial", 20))
-    label1.place(x=900, y=400, anchor='w')
-    label2 = tk.Label(root, text=users_name[(client_id + 2) % 6], font=("Arial", 20))
-    label2.place(x=900, y=200, anchor='w')
-    label3 = tk.Label(root, text=users_name[(client_id + 3) % 6], font=("Arial", 20))
-    label3.place(x=200, y=0, anchor='w')
-    label4 = tk.Label(root, text=users_name[(client_id + 4) % 6], font=("Arial", 20))
-    label4.place(x=0, y=200, anchor='w')
-    label5 = tk.Label(root, text=users_name[(client_id + 5) % 6], font=("Arial", 20))
-    label5.place(x=0, y=400, anchor='w')
+    label1 = tk.Label(root, text=field_info.user_names[(field_info.client_id + 1) % 6], font=("Arial", 20))
+    label1.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT / 2, anchor='ne')
+    label2 = tk.Label(root, text=field_info.user_names[(field_info.client_id + 2) % 6], font=("Arial", 20))
+    label2.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT / 4, anchor='ne')
+    label3 = tk.Label(root, text=field_info.user_names[(field_info.client_id + 3) % 6], font=("Arial", 20))
+    label3.place(x=DEFAULT_WINDOW_WIDTH / 2, y=0, anchor='n')
+    label4 = tk.Label(root, text=field_info.user_names[(field_info.client_id + 4) % 6], font=("Arial", 20))
+    label4.place(x=20, y=DEFAULT_WINDOW_HEIGHT / 4, anchor='nw')
+    label5 = tk.Label(root, text=field_info.user_names[(field_info.client_id + 5) % 6], font=("Arial", 20))
+    label5.place(x=20, y=DEFAULT_WINDOW_HEIGHT / 2, anchor='nw')

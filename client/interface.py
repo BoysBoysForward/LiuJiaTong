@@ -4,7 +4,7 @@ from terminal_printer import *
 import utils
 import copy
 from card import Card
-
+from FieldInfo import FieldInfo
 from gui import update_gui
 
 INTERFACE_TYPE = "CLI" # "CLI" or "GUI", default "CLI"
@@ -284,7 +284,8 @@ def main_interface(
     if INTERFACE_TYPE == "CLI":
         print_article(article, th) # 打印
     else:
-        update_gui(client_player, users_name, client_cards)
+        field_info = FieldInfo(client_player, client_cards, users_name, users_cards, users_cards_num)
+        update_gui(field_info)
 
     _play_sound(
         is_start=is_start,
