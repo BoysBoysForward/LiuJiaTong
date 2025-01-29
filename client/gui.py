@@ -69,6 +69,7 @@ def handle_update_event(event):
     logger.info("handle update event")
     draw_user_names()
     draw_user_cards()
+    draw_buttons()
 
 def card_to_photo(card: Card) -> ImageTk.PhotoImage:
     # 卡牌素材来源：https://gitcode.com/open-source-toolkit/77d38/?utm_source=tools_gitcode&index=bottom&type=card&
@@ -144,7 +145,7 @@ def draw_my_cards():
     # Draw my cards
     # 36张牌的宽度是71+35*20=771
     for i in range(len(gui_obj.field_info.client_cards)):
-        label = draw_one_card(gui_obj.field_info.client_cards[i], (DEFAULT_WINDOW_WIDTH - 1121) / 2 + i * 30, DEFAULT_WINDOW_HEIGHT - 140)
+        label = draw_one_card(gui_obj.field_info.client_cards[i], (DEFAULT_WINDOW_WIDTH - 1121) / 2 + i * 30 - 80, DEFAULT_WINDOW_HEIGHT - 140)
         gui_obj.my_card_labels.append(label)
 
 def draw_left_cards():
@@ -172,9 +173,11 @@ def draw_right_cards():
     draw_background(DEFAULT_WINDOW_WIDTH - 40, DEFAULT_WINDOW_HEIGHT / 2 + 80, "ne")
 
 def draw_top_cards():
-    print(f"Card num: {gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 3) % 6]}")
+    top_text = f"剩{gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 3) % 6]}张"
+    top_label = tk.Label(gui_obj.root, text=top_text, font=("Arial", 20))
+    top_label.place(x=DEFAULT_WINDOW_WIDTH - 80, y=80, anchor='ne')
     for i in range(gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 3) % 6]):
-        draw_background((DEFAULT_WINDOW_WIDTH - 1121) / 2 + i * 30, 40)
+        draw_background((DEFAULT_WINDOW_WIDTH - 1121) / 2 + i * 30 - 80, 40)
 
 def draw_user_cards():
     draw_my_cards()
@@ -200,17 +203,23 @@ def draw_user_names():
     label5.place(x=20, y=DEFAULT_WINDOW_HEIGHT / 2, anchor='nw')
 
 def draw_buttons():
-    reset_button = tk.Button(gui_obj.root, text="Click Me", command=on_reset_button_click)
-    reset_button.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT - 150)
+    reset_button = tk.Button(gui_obj.root, text="重置", width=18, command=on_reset_button_click)
+    reset_button.place(x=DEFAULT_WINDOW_WIDTH - 30, y=DEFAULT_WINDOW_HEIGHT - 150, anchor='ne')
 
-    confirm_button = tk.Button(gui_obj.root, text="Confirm", command=on_confirm_button_click)
-    confirm_button.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT - 100)
+    confirm_button = tk.Button(gui_obj.root, text="确定", width=18, command=on_confirm_button_click)
+    confirm_button.place(x=DEFAULT_WINDOW_WIDTH - 30, y=DEFAULT_WINDOW_HEIGHT - 100, anchor='ne')
 
-    skip_button = tk.Button(gui_obj.root, text="Skip", command=on_skip_button_click)
-    skip_button.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT - 50)
+    skip_button = tk.Button(gui_obj.root, text="跳过", width=18, command=on_skip_button_click)
+    skip_button.place(x=DEFAULT_WINDOW_WIDTH - 30, y=DEFAULT_WINDOW_HEIGHT - 50, anchor='ne')
     
 def on_reset_button_click():
-    pass
+    # 遍历label
+    for label in gui_obj.my_card_labels:
+        # 撤销所有选中的牌
+        label_index = gui_obj.my_card_labels.index(label)
+        if gui_obj.selected_card_flag[label_index]:
+            label.place(x=label.winfo_x(), y=label.winfo_y() + 20)
+            gui_obj.selected_card_flag[label_index] = False
 
 def on_confirm_button_click():
     pass
