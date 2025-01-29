@@ -222,7 +222,16 @@ def on_reset_button_click():
             gui_obj.selected_card_flag[label_index] = False
 
 def on_confirm_button_click():
+    # 检查卡牌合法性
+
+    # 抽出卡牌
+
+    # 重绘UI
     pass
 
 def on_skip_button_click():
-    pass
+    # 重置卡牌
+    on_reset_button_click()
+
+    # 告知服务器
+
