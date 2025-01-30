@@ -80,6 +80,15 @@ def draw_cards(cards: list[Card], targets: list[str]) -> list[Card]:
             i += 1
     return result
 
+def calculate_score(cards: list[Card]):
+    score = 0
+    for c in cards:
+        if c.value == 5:
+            score += 5
+        elif c.value == 10 or c.value == 13:
+            score += 10
+    return score
+
 
 # 返回上一位出牌玩家下标
 def last_played(played_cards, player):

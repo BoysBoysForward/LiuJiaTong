@@ -12,7 +12,6 @@ from card import Card
 from FieldInfo import FieldInfo
 import queue
 from gui import card_queue
-from interface import INTERFACE_TYPE
 
 class SpecialInput(Enum):
     left_arrow = auto(),
@@ -272,14 +271,14 @@ def get_legal_user_input_from_cli(
         tcp_handler.send_playing_heartbeat(finished=True)
         return user_input, new_score
 
-def get_user_input_from_gui() -> tuple[list[Card], int]:
+def get_leagal_user_input_from_gui() -> tuple[list[Card], int]:
     while True:
         try:
-            # 从队列中获取用户选择的卡牌
+            # 从队列中获取用户选择的卡牌，GUI必须给出一个合法牌型
             selected_cards = card_queue.get(timeout=1)
             print(f"User selected cards: {selected_cards}")
             # 处理用户选择的卡牌
-            return selected_cards
+            return selected_cards, utils.calculate_score(selected_cards)
         except queue.Empty:
             # 如果队列为空，继续等待
             continue
@@ -301,25 +300,27 @@ def playing(
     tcp_handler,                    # 客户端句柄，用于检测远端是否关闭了
 ) -> tuple[list[Card], int]:
     tcp_handler.logger.info("playing")
+    tcp_handler.logger.info(f"last played: {users_played_cards[last_player] if last_player != client_player else None}")
+    
     global g_tcp_handler
     g_tcp_handler = tcp_handler
     reset_user_hang_out()
     prepare_input_buffer()
-    print('请输入要出的手牌(\'F\'表示跳过):')
     global g_terminal_handler
     g_terminal_handler = PlayingTerminalHandler()
-    tcp_handler.logger.info(f"last played: {users_played_cards[last_player] if last_player != client_player else None}")
-
-    new_score = 0
-    if INTERFACE_TYPE == "CLI":
-        user_input, new_score = get_legal_user_input_from_cli(client_cards, last_player, client_player, users_played_cards, tcp_handler)
-    else:
-        user_input, new_score = get_user_input_from_gui()
     
-    # 返回用户每种牌的前n张
-    # 根据用户输入的字符串，返回用户打出的牌
-    if user_input == ['F']:
-        new_played_cards = ['F']
-    else:
+    from interface import INTERFACE_TYPE
+    tcp_handler.logger.info(f"Interface type: {INTERFACE_TYPE}")
+    if INTERFACE_TYPE == "CLI":
+        print('请输入要出的手牌(\'F\'表示跳过):')
+        user_input, new_score = get_legal_user_input_from_cli(client_cards, last_player, client_player, users_played_cards, tcp_handler)
+        if user_input == ['F']: return ['F'], 0
+        # 返回用户每种牌的前n张
+        # 根据用户输入的字符串，返回用户打出的牌
         new_played_cards = utils.draw_cards(client_cards, user_input)
+    else:
+        tcp_handler.logger.info("get_leagal_user_input_from_gui")
+        new_played_cards, new_score = get_leagal_user_input_from_gui()
+        if new_played_cards == ['F']: return ['F'], 0
+
     return new_played_cards, new_score

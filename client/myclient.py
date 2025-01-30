@@ -319,10 +319,16 @@ class Client:
                     # 更新本地数据
                     self.users_played_cards[self.client_player] = new_played_cards # 更新玩家打出的牌
                     if new_played_cards != ['F']:
-                        for card in new_played_cards:
-                            self.client_cards.remove(card) # 更新剩余手牌
+                        self.remove_cards(new_played_cards)
                     self.now_score += new_score # 更新场上分数
 
                     # 更新服务端数据
                     self.send_player_info() # 将数据发送给服务器
                 self.handle_connection_error(player_playing_cards, "在游戏时与服务器链接失效(用户打牌)")
+
+    def remove_cards(self, cards: list[Card]):
+        for card in cards:
+            for i in range(len(self.client_cards)):
+                if self.client_cards[i] == card:
+                    self.client_cards.pop(i) # 更新剩余手牌
+                    break

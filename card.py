@@ -45,13 +45,13 @@ class Card:
         
     #     return NotImplemented
     
-    # def __eq__(self, other):
-    #     if isinstance(other, Card):
-    #         return self.value == other.value
-    #     if isinstance(other, int):
-    #         return self.value == other
+    def __eq__(self, other):
+        if isinstance(other, Card):
+            return self.value == other.value
+        if isinstance(other, int):
+            return self.value == other
         
-    #     return NotImplemented
+        return NotImplemented
     
     # def __ne__(self, other):
     #     if isinstance(other, Card):
