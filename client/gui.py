@@ -8,6 +8,10 @@ import logger
 from card import Card, Suits
 from FieldInfo import FieldInfo
 import utils
+import queue
+
+# 创建一个线程安全的队列，用于传递用户选中的卡牌
+card_queue = queue.Queue()
 
 # users_name = []
 # my_cards = []
@@ -223,7 +227,7 @@ def on_reset_button_click():
 
 def on_confirm_button_click():
     # 检查卡牌合法性
-
+    
     # 抽出卡牌
 
     # 重绘UI

@@ -284,7 +284,11 @@ def main_interface(
     if INTERFACE_TYPE == "CLI":
         print_article(article, th) # 打印
     else:
-        field_info = FieldInfo(client_player, client_cards, users_name, users_cards, users_cards_num)
+        field_info = FieldInfo(
+            is_start, is_player, client_player, client_cards, 
+            users_name, users_score, users_cards_num, users_cards, 
+            users_played_cards, head_master, now_score, now_player, 
+            last_player, his_now_score, his_last_player)
         update_gui(field_info)
 
     _play_sound(

@@ -9,6 +9,10 @@ from playingrules import validate_user_input
 from terminal_printer import *
 import sound
 from card import Card
+from FieldInfo import FieldInfo
+import queue
+from gui import card_queue
+from interface import INTERFACE_TYPE
 
 class SpecialInput(Enum):
     left_arrow = auto(),
@@ -239,6 +243,47 @@ def read_userinput(client_cards: list[Card]) -> list[str]:
         assert(th.new_played_cards == ['F'] or th.new_played_cards.count('F') == 0) # 不允许夹杂跳过，避免误输入
     return th.new_played_cards
 
+def get_legal_user_input_from_cli(
+    client_cards      : list[Card], # 用户所持卡牌信息
+    last_player       : int,        # 最后打出牌的玩家
+    client_id     : int,        # 客户端正在输入的玩家
+    users_played_cards: list[Card], # 场上所有牌信息
+    tcp_handler,              # 客户端句柄，用于检测远端是否关闭了
+) -> tuple[list[Card], int]:
+    while True:
+        user_input = read_userinput(client_cards)
+        # 11/03/2024: 支持Card类
+        tcp_handler.logger.info(f"New Played: {user_input}")
+        tcp_handler.logger.info(f"Client Cards: {client_cards}")
+        tcp_handler.logger.info(f"Last Player: {last_player}. Played: {[str(c) for c in users_played_cards[last_player]] if last_player != client_id else None}")
+        tcp_handler.logger.info(f"Client Player: {client_id}")
+        legal_input, new_score = validate_user_input(
+            utils.strs_to_ints(user_input),
+            client_cards,
+            users_played_cards[last_player] if last_player != client_id else None
+        )
+        if not legal_input:
+            tcp_handler.logger.info(f"illegal input: {user_input}")
+            g_terminal_handler.err = '(非法牌型)'
+            g_terminal_handler.print()
+            continue
+
+        tcp_handler.logger.info(f"Now play: {user_input}")
+        tcp_handler.send_playing_heartbeat(finished=True)
+        return user_input, new_score
+
+def get_user_input_from_gui() -> tuple[list[Card], int]:
+    while True:
+        try:
+            # 从队列中获取用户选择的卡牌
+            selected_cards = card_queue.get(timeout=1)
+            print(f"User selected cards: {selected_cards}")
+            # 处理用户选择的卡牌
+            return selected_cards
+        except queue.Empty:
+            # 如果队列为空，继续等待
+            continue
+
 # 01/04/2024: 支持Card类
 def get_card_count(client_cards: list[Card], card: str) -> int:
     result = 0
@@ -263,31 +308,13 @@ def playing(
     print('请输入要出的手牌(\'F\'表示跳过):')
     global g_terminal_handler
     g_terminal_handler = PlayingTerminalHandler()
-
-    user_input = []
-    new_score = 0
-
     tcp_handler.logger.info(f"last played: {users_played_cards[last_player] if last_player != client_player else None}")
-    while True:
-        user_input = read_userinput(client_cards)
 
-        # 11/03/2024: 支持Card类
-        tcp_handler.logger.info(f"New Played: {user_input}")
-        tcp_handler.logger.info(f"Client Cards: {client_cards}")
-        tcp_handler.logger.info(f"Last Player: {last_player}. Played: {[str(c) for c in users_played_cards[last_player]] if last_player != client_player else None}")
-        tcp_handler.logger.info(f"Client Player: {client_player}")
-        legal_input, new_score = validate_user_input(
-            utils.strs_to_ints(user_input),
-            client_cards,
-            users_played_cards[last_player] if last_player != client_player else None
-        )
-        if legal_input:
-            tcp_handler.logger.info(f"Now play: {user_input}")
-            tcp_handler.send_playing_heartbeat(finished=True)
-            break
-        tcp_handler.logger.info(f"illegal input: {user_input}")
-        g_terminal_handler.err = '(非法牌型)'
-        g_terminal_handler.print()
+    new_score = 0
+    if INTERFACE_TYPE == "CLI":
+        user_input, new_score = get_legal_user_input_from_cli(client_cards, last_player, client_player, users_played_cards, tcp_handler)
+    else:
+        user_input, new_score = get_user_input_from_gui()
     
     # 返回用户每种牌的前n张
     # 根据用户输入的字符串，返回用户打出的牌
