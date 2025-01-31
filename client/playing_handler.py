@@ -266,9 +266,6 @@ def get_legal_user_input_from_cli(
             g_terminal_handler.err = '(非法牌型)'
             g_terminal_handler.print()
             continue
-
-        tcp_handler.logger.info(f"Now play: {user_input}")
-        tcp_handler.send_playing_heartbeat(finished=True)
         return user_input, new_score
 
 def get_leagal_user_input_from_gui() -> tuple[list[Card], int]:
@@ -323,4 +320,6 @@ def playing(
         new_played_cards, new_score = get_leagal_user_input_from_gui()
         if new_played_cards == ['F']: return ['F'], 0
 
+    tcp_handler.logger.info(f"Now play: {new_played_cards}")
+    tcp_handler.send_playing_heartbeat(finished=True)
     return new_played_cards, new_score
