@@ -9,11 +9,13 @@ class Player(GameStateMachine):
     def __handle_error(self, e):
         utils.error(f"Player {self.pid}({self.client_player}, {self.state}) error: {e}")
         self.error = True
+    
     def __update_local_cache(self):
         with gvar.game_lock:
             self.__game_over = gvar.game_over
             self.__now_player = gvar.now_player
     # 抽象类方法
+    
     def game_start(self): 
         raise RuntimeError("Unsupport state")
     def game_over(self): 
@@ -59,6 +61,7 @@ class Player(GameStateMachine):
                 self.tcp_handler.send_round_info()
         except Exception as e:
             self.__handle_error(e)
+    
     def recv_player_info(self): 
         """
         接收玩家信息，并更新游戏状态
@@ -66,6 +69,7 @@ class Player(GameStateMachine):
         该函数负责接收客户端发送的玩家信息，包括玩家手牌、已出牌和当前得分。
         同时，它还会更新游戏状态，包括玩家手牌、已出牌和当前得分。
         """
+        print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}")
         assert self.error is False
         try:
             with gvar.users_info_lock:
@@ -77,9 +81,9 @@ class Player(GameStateMachine):
 
             # 接收客户端发送的玩家信息
             user_cards, user_played_cards, now_score = self.tcp_handler.recv_player_reply()
-            print(f"Player {self.pid}({self.client_player}) received cards:{user_cards}")
-            print(f"Player {self.pid}({self.client_player}) received played cards:{user_played_cards}")
-            print(f"Player {self.pid}({self.client_player}) received score:{now_score}")
+            print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received cards:{user_cards}")
+            print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received played cards:{user_played_cards}")
+            print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received score:{now_score}")
             
             # 更新游戏状态
             with gvar.game_lock:
@@ -91,18 +95,24 @@ class Player(GameStateMachine):
                 print(f'Player {self.pid}({self.client_player}) played cards:{gvar.users_played_cards[self.client_player]}')
         except Exception as e:
             self.__handle_error(e)
+    
     def init_sync(self): 
         gvar.game_init_barrier.wait()
+    
     def onlooker_sync(self): 
         raise RuntimeError("Unsupport state")
+    
     def game_start_sync(self): 
         gvar.game_start_barrier.wait()
         # 这里放松了条件，因为在下一个同步点之前数据是只读的
         self.__update_local_cache()
+    
     def send_round_info_sync(self): 
         gvar.send_round_info_barrier.wait()
+    
     def recv_player_info_sync(self): 
         gvar.recv_player_info_barrier.wait()
+    
     def next_turn_sync(self): 
         gvar.next_turn_barrier.wait()
         # 这里放松了条件，因为在下一个同步点之前数据是只读的
@@ -125,6 +135,7 @@ class Player(GameStateMachine):
             if self.state == self.his_state:
                 self.his_state = None
             nonlocal recovery; recovery = True
+
         # 状态转移
         if self.state == GameState.init:
             if self.his_state is None:
