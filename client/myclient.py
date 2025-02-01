@@ -47,7 +47,7 @@ class Client:
         self.users_cards_num    : list[int]        = [0 for _ in range(6)]  # 用户牌数
         self.users_score        : list[int]        = [0 for _ in range(6)]  # 用户分数
         self.users_played_cards : list[list[Card]] = [[] for _ in range(6)] # 场上的牌
-        self.head_master        : int              = 0                      # 头科
+        self.head_master        : int              = 0                      # 头科, 默认为-1, 否则是用户序号
         self.his_now_score      : int              = 0                      # 历史场上分数，用于判断是否发生了得分
         self.his_last_player    : int              = None                   # 历史上一个打牌的人，用于判断是否上次发生打牌事件
         self.is_start           : bool             = False                  # 记录是否游戏还在开局, False代表游戏尚未开始

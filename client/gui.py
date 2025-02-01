@@ -10,6 +10,7 @@ from FieldInfo import FieldInfo
 import utils
 import queue
 from logging import Logger
+import playingrules
 
 # 创建一个线程安全的队列，用于传递用户选中的卡牌
 card_queue = queue.Queue()
@@ -302,7 +303,9 @@ def draw_scores():
     field_score_text = f"场上分数: {field_score}"
     now_player_name = gui_obj.field_info.user_names[gui_obj.field_info.now_player]
     now_player_name_text = f"当前出牌: {now_player_name}"
-    score_label = tk.Label(gui_obj.root, text=f"{my_team_score_text}\n{opposing_team_score_text}\n{field_score_text}\n{now_player_name_text}", font=("Arial", 20))
+    head_master = gui_obj.field_info.users_names[gui_obj.field_info.head_master] if gui_obj.field_info.head_master != -1 else "无"
+    head_master_text = f"头科: {head_master}"
+    score_label = tk.Label(gui_obj.root, text=f"{my_team_score_text}\n{opposing_team_score_text}\n{field_score_text}\n{now_player_name_text}\n{head_master_text}", font=("Arial", 20))
     score_label.place(x=DEFAULT_WINDOW_WIDTH - 50, y=DEFAULT_VERTICAL_MARGIN, anchor='ne')
 
 # Click Event
@@ -351,11 +354,20 @@ def on_confirm_button_click():
         if gui_obj.selected_card_flag[label_index]:
             selected_cards.append(gui_obj.field_info.client_cards[label_index])
     
+    valid_result = playingrules.validate_user_selected_cards(
+        selected_cards, 
+        gui_obj.field_info.client_cards, 
+        gui_obj.field_info.users_played_cards[gui_obj.field_info.last_player] if gui_obj.field_info.last_player != gui_obj.field_info.client_id else None
+    )
+
+    if not valid_result:
+        gui_obj.logger.info("卡牌不合法")
+        return
+
+    # 告知服务器
     selected_cards_str = [str(c) for c in selected_cards]
     gui_obj.logger.info(f"selected_cards: {selected_cards_str}")
     card_queue.put(selected_cards)
-    
-    # 重绘UI
 
 def on_skip_button_click():
     gui_obj.logger.info("on_skip_button_click")
