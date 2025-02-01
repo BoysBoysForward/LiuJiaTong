@@ -82,7 +82,10 @@ class Player(GameStateMachine):
             # 接收客户端发送的玩家信息
             user_cards, user_played_cards, now_score = self.tcp_handler.recv_player_reply()
             print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received cards:{utils.cards_to_strs(user_cards)}")
-            print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received played cards:{utils.cards_to_strs(user_played_cards)}")
+            if user_played_cards == ['F']:
+                print(f'Player {self.pid}({self.client_player}) played cards: {user_played_cards}')
+            else:
+                print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received played cards:{utils.cards_to_strs(user_played_cards)}")
             print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received score:{now_score}")
             
             # 更新游戏状态
@@ -92,7 +95,10 @@ class Player(GameStateMachine):
                 gvar.users_cards[self.client_player]        = user_cards        # 更新玩家手牌
                 gvar.users_played_cards[self.client_player] = user_played_cards # 更新玩家已出牌
                 gvar.now_score                              = now_score         # 更新当前得分
-                print(f'Player {self.pid}({self.client_player}) played cards:{gvar.users_played_cards[self.client_player]}')
+                if gvar.users_played_cards[self.client_player] == ['F']:
+                    print(f'Player {self.pid}({self.client_player}) played cards: {gvar.users_played_cards[self.client_player]}')
+                else:
+                    print(f'Player {self.pid}({self.client_player}) played cards:{utils.cards_to_strs(gvar.users_played_cards[self.client_player])}')
         except Exception as e:
             self.__handle_error(e)
     
