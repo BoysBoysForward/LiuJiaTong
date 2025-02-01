@@ -47,7 +47,7 @@ class Card:
     
     def __eq__(self, other):
         if isinstance(other, Card):
-            return self.value == other.value
+            return self.value == other.value and self.suit == other.suit
         if isinstance(other, int):
             return self.value == other
         
