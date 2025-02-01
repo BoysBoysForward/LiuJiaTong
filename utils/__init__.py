@@ -66,6 +66,14 @@ def cards_to_ints(cards: list[Card]):
             raise TypeError('cards must be Card type')
     return [c.value for c in cards]
 
+def cards_to_strs(cards: list[Card]):
+    if cards is None:
+        return None
+    # 检查数据类型
+    for c in cards:
+        if not isinstance(c, Card):
+            raise TypeError('cards must be Card type')
+    return [str(c) for c in cards]
 
 def draw_cards(cards: list[Card], targets: list[str]) -> list[Card]:
     # 双指针遍历cards和targets，找到value与targets中int值相同的card

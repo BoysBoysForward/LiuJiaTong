@@ -81,8 +81,8 @@ class Player(GameStateMachine):
 
             # 接收客户端发送的玩家信息
             user_cards, user_played_cards, now_score = self.tcp_handler.recv_player_reply()
-            print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received cards:{user_cards}")
-            print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received played cards:{user_played_cards}")
+            print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received cards:{utils.cards_to_strs(user_cards)}")
+            print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received played cards:{utils.cards_to_strs(user_played_cards)}")
             print(f"recv_player_info. ID:{self.client_player}, PID:{self.pid}. Received score:{now_score}")
             
             # 更新游戏状态
