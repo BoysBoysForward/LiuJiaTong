@@ -18,6 +18,18 @@ card_queue = queue.Queue()
 # my_cards = []
 DEFAULT_WINDOW_WIDTH = 1440
 DEFAULT_WINDOW_HEIGHT = 810
+DEFAULT_VERTICAL_MARGIN = 40
+
+HORIZONTAL_CARD_MARGIN = 120
+VERTICAL_CARD_SPACING = 26
+DEFAULT_CARD_WIDTH = 71
+DEFAULT_CARD_HEIGHT = 100
+DEFAULT_CARD_SPACING = 20
+PLAYED_CARD_SPACING = 30
+UPPER_CARD_Y = DEFAULT_VERTICAL_MARGIN + DEFAULT_CARD_HEIGHT * 2 + VERTICAL_CARD_SPACING * 2
+LOWER_CARD_Y = UPPER_CARD_Y + DEFAULT_CARD_HEIGHT + VERTICAL_CARD_SPACING
+
+DEFAULT_LINE_SPACING = 30
 
 class GUI:
     def __init__(self, root: tk.Tk, logger: Logger):
@@ -73,7 +85,12 @@ def init_gui(logger):
 
 def handle_update_event(event):
     gui_obj.logger.info("handle_update_event")
-    draw_user_names()
+
+    # 清空界面
+    for widget in gui_obj.root.winfo_children():
+        widget.destroy()
+
+    # 重新绘制界面
     draw_user_cards()
     draw_buttons()
 
@@ -147,90 +164,122 @@ def draw_background(x: int, y: int, anchor: str='nw'):
     label = tk.Label(gui_obj.root, image=photo) # 这里的image参数是必须指定的，与下一行不冲突
     label.image = photo
     label.place(x=x, y=y, anchor=anchor)
-    
-def draw_my_cards():
-    # Draw my cards
-    # 36张牌的宽度是71+35*20=771
-    gui_obj.my_card_labels = [] # 先清空，不然每次都会变长
-    for i in range(len(gui_obj.field_info.client_cards)):
-        label = draw_one_card(gui_obj.field_info.client_cards[i], (DEFAULT_WINDOW_WIDTH - 1121) / 2 + i * 30 - 80, DEFAULT_WINDOW_HEIGHT - 140)
-        gui_obj.my_card_labels.append(label)
-
-def draw_left_cards():
-    gui_obj.logger.info("draw_left_cards")
-    # Draw other player cards with Background.png
-    left_text_1 = f"剩{gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 4) % 6]}张"
-    left_label_1 = tk.Label(gui_obj.root, text=left_text_1, font=("Arial", 20))
-    left_label_1.place(x=20, y=DEFAULT_WINDOW_HEIGHT / 4 + 40, anchor='nw')
-    draw_background(40, DEFAULT_WINDOW_HEIGHT / 4 + 80)
-    
-    left_text_2 = f"剩{gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 5) % 6]}张"
-    left_label_2 = tk.Label(gui_obj.root, text=left_text_2, font=("Arial", 20))
-    left_label_2.place(x=20, y=DEFAULT_WINDOW_HEIGHT / 2 + 40, anchor='nw')
-    draw_background(40, DEFAULT_WINDOW_HEIGHT / 2 + 80)
-
-    north_west_user_played_cards = gui_obj.field_info.users_played_cards[(gui_obj.field_info.client_id + 4) % 6]
-    gui_obj.logger.info(f"north_west_user_played_cards: {north_west_user_played_cards}")
-    for i in range(len(north_west_user_played_cards)):
-        draw_one_card(north_west_user_played_cards[i], 141 + 30 * i, DEFAULT_WINDOW_HEIGHT / 4 + 80)
-
-    south_west_user_played_cards = gui_obj.field_info.users_played_cards[(gui_obj.field_info.client_id + 5) % 6]
-    gui_obj.logger.info(f"south_west_user_played_cards: {south_west_user_played_cards}")
-    for i in range(len(south_west_user_played_cards)):
-        draw_one_card(south_west_user_played_cards[i], 141 + 30 * i, DEFAULT_WINDOW_HEIGHT / 2 + 80)
-
-def draw_right_cards():
-    gui_obj.logger.info("draw_right_cards")
-    # Draw other player cards with Background.png
-    right_text_1 = f"剩{gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 2) % 6]}张"
-    right_label_1 = tk.Label(gui_obj.root, text=right_text_1, font=("Arial", 20))
-    right_label_1.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT / 4 + 40, anchor='ne')
-    draw_background(DEFAULT_WINDOW_WIDTH - 40, DEFAULT_WINDOW_HEIGHT / 4 + 80, "ne")
-    
-    right_text_2 = f"剩{gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 1) % 6]}张"
-    right_label_2 = tk.Label(gui_obj.root, text=right_text_2, font=("Arial", 20))
-    right_label_2.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT / 2 + 40, anchor='ne')
-    draw_background(DEFAULT_WINDOW_WIDTH - 40, DEFAULT_WINDOW_HEIGHT / 2 + 80, "ne")
-
-    north_east_user_played_cards = gui_obj.field_info.users_played_cards[(gui_obj.field_info.client_id + 2) % 6]
-    gui_obj.logger.info(f"north_east_user_played_cards: {north_east_user_played_cards}")
-    for i in range(len(north_east_user_played_cards)):
-        draw_one_card(north_east_user_played_cards[len(north_east_user_played_cards) - i - 1], DEFAULT_WINDOW_WIDTH - 212 - 30 * i, DEFAULT_WINDOW_HEIGHT / 4 + 80)
-
-    south_east_user_played_cards = gui_obj.field_info.users_played_cards[(gui_obj.field_info.client_id + 1) % 6]
-    gui_obj.logger.info(f"south_east_user_played_cards: {south_east_user_played_cards}")
-    for i in range(len(south_east_user_played_cards)):
-        draw_one_card(south_east_user_played_cards[len(north_east_user_played_cards) - i - 1], DEFAULT_WINDOW_WIDTH - 212 - 30 * i, DEFAULT_WINDOW_HEIGHT / 2 + 80)
-
-def draw_top_cards():
-    top_text = f"剩{gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 3) % 6]}张"
-    top_label = tk.Label(gui_obj.root, text=top_text, font=("Arial", 20))
-    top_label.place(x=DEFAULT_WINDOW_WIDTH - 80, y=80, anchor='ne')
-    for i in range(gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 3) % 6]):
-        draw_background((DEFAULT_WINDOW_WIDTH - 1121) / 2 + i * 30 - 80, 40)
 
 def draw_user_cards():
     gui_obj.logger.info("draw_user_cards")
-    draw_my_cards()
-    draw_left_cards()
-    draw_right_cards()
-    draw_top_cards()
+    draw_vertical_user_pairs()
+    draw_upper_horizontal_user_pairs()
+    draw_lower_horizontal_user_pairs()
 
-def draw_user_names():
-    gui_obj.logger.info(f"draw_user_names: {gui_obj.field_info.user_names}")
+def draw_vertical_user_pairs():
+    horizontal_margin = 70
+    vertical_margin = DEFAULT_VERTICAL_MARGIN + DEFAULT_CARD_HEIGHT / 2
 
-    # 从下一个玩家开始绘制名字，两个右侧，一个顶部，两个左侧
-    global label1, label2, label3, label4, label5
-    label1 = tk.Label(gui_obj.root, text=gui_obj.field_info.user_names[(gui_obj.field_info.client_id + 1) % 6], font=("Arial", 20))
-    label1.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT / 2, anchor='ne')
-    label2 = tk.Label(gui_obj.root, text=gui_obj.field_info.user_names[(gui_obj.field_info.client_id + 2) % 6], font=("Arial", 20))
-    label2.place(x=DEFAULT_WINDOW_WIDTH - 20, y=DEFAULT_WINDOW_HEIGHT / 4, anchor='ne')
-    label3 = tk.Label(gui_obj.root, text=gui_obj.field_info.user_names[(gui_obj.field_info.client_id + 3) % 6], font=("Arial", 20))
-    label3.place(x=DEFAULT_WINDOW_WIDTH / 2, y=0, anchor='n')
-    label4 = tk.Label(gui_obj.root, text=gui_obj.field_info.user_names[(gui_obj.field_info.client_id + 4) % 6], font=("Arial", 20))
-    label4.place(x=20, y=DEFAULT_WINDOW_HEIGHT / 4, anchor='nw')
-    label5 = tk.Label(gui_obj.root, text=gui_obj.field_info.user_names[(gui_obj.field_info.client_id + 5) % 6], font=("Arial", 20))
-    label5.place(x=20, y=DEFAULT_WINDOW_HEIGHT / 2, anchor='nw')
+    # My Info
+    my_info = f"{gui_obj.field_info.user_names[gui_obj.field_info.client_id]} 剩{gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 3) % 6]}张"
+    my_info_label = tk.Label(gui_obj.root, text=my_info, font=("Arial", 20))
+    my_info_label.place(x=horizontal_margin, y=DEFAULT_WINDOW_HEIGHT - vertical_margin, anchor='w')
+
+    # My Cards
+    gui_obj.my_card_labels = [] # 先清空，不然每次都会变长
+    for i in range(len(gui_obj.field_info.client_cards)):
+        card_x = (DEFAULT_WINDOW_WIDTH - DEFAULT_CARD_WIDTH - DEFAULT_CARD_SPACING * 36) / 2 + i * DEFAULT_CARD_SPACING
+        label = draw_one_card(gui_obj.field_info.client_cards[i], card_x, DEFAULT_WINDOW_HEIGHT - 140)
+        gui_obj.my_card_labels.append(label)
+
+    # My Played Cards
+    my_played_cards = gui_obj.field_info.users_played_cards[gui_obj.field_info.client_id]
+    gui_obj.logger.info(f"my_played_cards: {my_played_cards}")
+    for i in range(len(my_played_cards)):
+        card_x = (DEFAULT_WINDOW_WIDTH - DEFAULT_CARD_WIDTH - DEFAULT_CARD_SPACING * len(my_played_cards)) / 2 + i * DEFAULT_CARD_SPACING
+        card_y = DEFAULT_WINDOW_HEIGHT - DEFAULT_VERTICAL_MARGIN - DEFAULT_CARD_HEIGHT * 2 - VERTICAL_CARD_SPACING
+        draw_one_card(my_played_cards[i], card_x, card_y)
+
+    # Top User INFO
+    top_user_info = f"{gui_obj.field_info.user_names[(gui_obj.field_info.client_id + 3) % 6]} 剩{gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 3) % 6]}张"
+    top_user_info_label = tk.Label(gui_obj.root, text=top_user_info, font=("Arial", 20))
+    top_user_info_label.place(x=horizontal_margin, y=vertical_margin, anchor='w')
+
+    # Top User Cards
+    for i in range(gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 3) % 6]):
+        card_x = (DEFAULT_WINDOW_WIDTH - DEFAULT_CARD_WIDTH - DEFAULT_CARD_SPACING * 36) / 2 + i * DEFAULT_CARD_SPACING
+        draw_background(card_x, 40)
+    
+    # Top User Played Cards
+    top_user_played_cards = gui_obj.field_info.users_played_cards[(gui_obj.field_info.client_id + 3) % 6]
+    gui_obj.logger.info(f"top_user_played_cards: {top_user_played_cards}")
+    for i in range(len(top_user_played_cards)):
+        card_x = (DEFAULT_WINDOW_WIDTH - DEFAULT_CARD_WIDTH - DEFAULT_CARD_SPACING * len(top_user_played_cards)) / 2 + i * DEFAULT_CARD_SPACING
+        card_y = DEFAULT_VERTICAL_MARGIN + DEFAULT_CARD_HEIGHT + VERTICAL_CARD_SPACING
+        draw_one_card(top_user_played_cards[i], card_x, card_y)
+
+def draw_upper_horizontal_user_pairs():
+    horizontal_margin = 20
+    vertical_margin = UPPER_CARD_Y + DEFAULT_CARD_HEIGHT / 2
+
+    # North-West User Info
+    north_west_user_name = gui_obj.field_info.user_names[(gui_obj.field_info.client_id + 4) % 6]
+    north_west_user_cards_num = gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 4) % 6]
+    north_west_user_info = f"{north_west_user_name}\n剩{north_west_user_cards_num}张"
+    north_west_user_info_label = tk.Label(gui_obj.root, text=north_west_user_info, font=("Arial", 20))
+    north_west_user_info_label.place(x=horizontal_margin, y=vertical_margin, anchor='w')
+
+    # North-East User Info
+    north_east_user_name = gui_obj.field_info.user_names[(gui_obj.field_info.client_id + 2) % 6]
+    north_east_user_cards_num = gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 2) % 6]
+    north_east_user_info = f"{north_east_user_name}\n剩{north_east_user_cards_num}张"
+    north_east_user_info_label = tk.Label(gui_obj.root, text=north_east_user_info, font=("Arial", 20))
+    north_east_user_info_label.place(x=DEFAULT_WINDOW_WIDTH - horizontal_margin, y=vertical_margin, anchor='e')
+
+    # North-West User Cards
+    draw_background(HORIZONTAL_CARD_MARGIN, UPPER_CARD_Y)
+    north_west_user_played_cards = gui_obj.field_info.users_played_cards[(gui_obj.field_info.client_id + 4) % 6]
+    gui_obj.logger.info(f"north_west_user_played_cards: {north_west_user_played_cards}")
+    for i in range(len(north_west_user_played_cards)):
+        card_x = HORIZONTAL_CARD_MARGIN + DEFAULT_CARD_WIDTH + PLAYED_CARD_SPACING + DEFAULT_CARD_SPACING * i
+        draw_one_card(north_west_user_played_cards[i], card_x, UPPER_CARD_Y)
+
+    # North-East User Cards
+    draw_background(DEFAULT_WINDOW_WIDTH - HORIZONTAL_CARD_MARGIN, UPPER_CARD_Y, "ne")
+    north_east_user_played_cards = gui_obj.field_info.users_played_cards[(gui_obj.field_info.client_id + 2) % 6]
+    gui_obj.logger.info(f"north_east_user_played_cards: {north_east_user_played_cards}")
+    for i in range(len(north_east_user_played_cards)):
+        card_x = DEFAULT_WINDOW_WIDTH - HORIZONTAL_CARD_MARGIN - DEFAULT_CARD_WIDTH * 2 - PLAYED_CARD_SPACING - DEFAULT_CARD_SPACING * (len(north_east_user_played_cards) - 1 - i)
+        draw_one_card(north_east_user_played_cards[i], card_x, UPPER_CARD_Y)
+
+def draw_lower_horizontal_user_pairs():
+    horizontal_margin = 20
+    vertical_margin = LOWER_CARD_Y + DEFAULT_CARD_HEIGHT / 2
+
+    # South-West User Info
+    south_west_user_name = gui_obj.field_info.user_names[(gui_obj.field_info.client_id + 5) % 6]
+    south_west_user_cards_num = gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 5) % 6]
+    south_west_user_info = f"{south_west_user_name}\n剩{south_west_user_cards_num}张"
+    south_west_user_info_label = tk.Label(gui_obj.root, text=south_west_user_info, font=("Arial", 20))
+    south_west_user_info_label.place(x=horizontal_margin, y=vertical_margin, anchor='w')
+
+    # South-East User Info
+    south_east_user_name = gui_obj.field_info.user_names[(gui_obj.field_info.client_id + 1) % 6]
+    south_east_user_cards_num = gui_obj.field_info.users_cards_num[(gui_obj.field_info.client_id + 1) % 6]
+    south_east_user_info = f"{south_east_user_name}\n剩{south_east_user_cards_num}张"
+    south_east_user_info_label = tk.Label(gui_obj.root, text=south_east_user_info, font=("Arial", 20))
+    south_east_user_info_label.place(x=DEFAULT_WINDOW_WIDTH - horizontal_margin, y=vertical_margin, anchor='e')
+
+    # South-West User Cards
+    draw_background(HORIZONTAL_CARD_MARGIN, LOWER_CARD_Y)
+    south_west_user_played_cards = gui_obj.field_info.users_played_cards[(gui_obj.field_info.client_id + 5) % 6]
+    gui_obj.logger.info(f"south_west_user_played_cards: {south_west_user_played_cards}")
+    for i in range(len(south_west_user_played_cards)):
+        card_x = HORIZONTAL_CARD_MARGIN + DEFAULT_CARD_WIDTH + PLAYED_CARD_SPACING + DEFAULT_CARD_SPACING * i
+        draw_one_card(south_west_user_played_cards[i], card_x, LOWER_CARD_Y)
+
+    # South-East User Cards
+    draw_background(DEFAULT_WINDOW_WIDTH - HORIZONTAL_CARD_MARGIN, LOWER_CARD_Y, "ne")
+    south_east_user_played_cards = gui_obj.field_info.users_played_cards[(gui_obj.field_info.client_id + 1) % 6]
+    gui_obj.logger.info(f"south_east_user_played_cards: {south_east_user_played_cards}")
+    for i in range(len(south_east_user_played_cards)):
+        card_x = DEFAULT_WINDOW_WIDTH - HORIZONTAL_CARD_MARGIN - DEFAULT_CARD_WIDTH * 2 - PLAYED_CARD_SPACING - DEFAULT_CARD_SPACING * (len(south_east_user_played_cards) - 1 - i)
+        draw_one_card(south_east_user_played_cards[i], card_x, LOWER_CARD_Y)
 
 def draw_buttons():
     gui_obj.logger.info("draw_buttons")
@@ -277,4 +326,4 @@ def on_skip_button_click():
     on_reset_button_click()
 
     # 告知服务器
-
+    card_queue.put(['F'])

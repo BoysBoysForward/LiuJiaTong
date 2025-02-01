@@ -311,14 +311,15 @@ def playing(
     if INTERFACE_TYPE == "CLI":
         print('请输入要出的手牌(\'F\'表示跳过):')
         user_input, new_score = get_legal_user_input_from_cli(client_cards, last_player, client_player, users_played_cards, tcp_handler)
-        if user_input == ['F']: return ['F'], 0
-        # 返回用户每种牌的前n张
-        # 根据用户输入的字符串，返回用户打出的牌
-        new_played_cards = utils.draw_cards(client_cards, user_input)
+        if user_input == ['F']:
+            new_played_cards = ['F']
+        else:
+            # 返回用户每种牌的前n张
+            # 根据用户输入的字符串，返回用户打出的牌
+            new_played_cards = utils.draw_cards(client_cards, user_input)
     else:
         tcp_handler.logger.info("get_leagal_user_input_from_gui")
         new_played_cards, new_score = get_leagal_user_input_from_gui()
-        if new_played_cards == ['F']: return ['F'], 0
 
     tcp_handler.logger.info(f"Now play: {new_played_cards}")
     tcp_handler.send_playing_heartbeat(finished=True)
