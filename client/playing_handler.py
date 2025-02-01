@@ -210,7 +210,7 @@ def read_userinput(client_cards: list[Card]) -> list[str]:
                 if th.cursor > 0:
                     fill_char = th.new_played_cards[th.cursor - 1]
                     used_num = th.new_played_cards.count(fill_char)
-                    total_num = get_card_count(client_cards, fill_char)
+                    total_num = utils.get_card_count(client_cards, fill_char)
                     fill_num = total_num - used_num
                     assert (fill_num >= 0)
                     th.new_played_cards = th.new_played_cards[:th.cursor] + fill_num * [fill_char] + th.new_played_cards[th.cursor:]
@@ -222,7 +222,7 @@ def read_userinput(client_cards: list[Card]) -> list[str]:
                 th.new_played_cards = []
                 th.cursor = 0
             else: # 输入一张牌
-                user_card_count = get_card_count(client_cards, input)
+                user_card_count = utils.get_card_count(client_cards, input)
                 assert(th.new_played_cards.count(input) <= user_card_count)
                 if th.new_played_cards.count(input) == user_card_count:
                     raise InputException('(你打出的牌超过上限了)')
@@ -275,18 +275,13 @@ def get_leagal_user_input_from_gui() -> tuple[list[Card], int]:
             selected_cards = card_queue.get(timeout=1)
             print(f"User selected cards: {selected_cards}")
             # 处理用户选择的卡牌
-            return selected_cards, utils.calculate_score(selected_cards)
+            if selected_cards == ['F']:
+                return ['F'], 0
+            else:
+                return selected_cards, utils.calculate_score(selected_cards)
         except queue.Empty:
             # 如果队列为空，继续等待
             continue
-
-# 01/04/2024: 支持Card类
-def get_card_count(client_cards: list[Card], card: str) -> int:
-    result = 0
-    for c in client_cards:
-        if c.get_cli_str() == card:
-            result += 1
-    return result
 
 # 从控制台获取用户输入，直到用户输入合法数据
 def playing(
