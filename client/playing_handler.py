@@ -273,7 +273,6 @@ def get_leagal_user_input_from_gui() -> tuple[list[Card], int]:
         try:
             # 从队列中获取用户选择的卡牌，GUI必须给出一个合法牌型
             selected_cards = card_queue.get(timeout=1)
-            print(f"User selected cards: {utils.cards_to_strs(selected_cards)}")
             # 处理用户选择的卡牌
             if selected_cards == ['F']:
                 return ['F'], 0
