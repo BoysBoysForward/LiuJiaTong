@@ -60,10 +60,17 @@ bool _tryTransformCards(
   if (cards.length < 4) return (type: CardType.illegalType, keyCard: 0);
 
   int spTypeNum = 0;
+  int normalBombKeyCard = 0;
   for (final k in cardNum.keys) {
-    if (k >= 3 && k <= 15) spTypeNum++;
+    if (k >= 3 && k <= 15) {
+      spTypeNum++;
+      // 记录普通炸弹的实际牌点（非大小王），用于作为关键牌比较
+      normalBombKeyCard = k;
+    }
   }
-  if (spTypeNum == 1) return (type: CardType.normalBomb, keyCard: cards.first);
+  if (spTypeNum == 1) {
+    return (type: CardType.normalBomb, keyCard: normalBombKeyCard);
+  }
   if (spTypeNum != 0) return (type: CardType.illegalType, keyCard: 0);
   if ((cardNum[16] ?? 0) == 4) return (type: CardType.blackJokerBomb, keyCard: 16);
   if ((cardNum[17] ?? 0) == 4) return (type: CardType.redJokerBomb, keyCard: 17);

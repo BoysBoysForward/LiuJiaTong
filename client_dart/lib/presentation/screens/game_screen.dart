@@ -376,21 +376,39 @@ class _GameScreenState extends State<GameScreen> {
     int score,
     _GameLayoutParams layout,
     Color textColor,
+    bool isCurrentTurn,
   ) {
     final displayName = _truncateName(name.isEmpty ? '?' : name, 8);
     final initial = displayName.isNotEmpty ? displayName[0] : '?';
+    final baseGradient = const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Color(0xFF0f2035), Color(0xFF1e3a52)],
+    );
+    final highlightGradient = const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Color(0xFF2459a6), Color(0xFF3b82f6)],
+    );
+    final borderColor = isCurrentTurn ? const Color(0xFFffd700) : const Color(0xFF3d5a80);
+    final glowColor = isCurrentTurn ? const Color(0x66ffd700) : Colors.transparent;
+
     return Container(
       width: layout.infoSectionWidth,
       height: layout.infoSectionHeight,
       padding: EdgeInsets.all(8 * layout.scale),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF0f2035), Color(0xFF1e3a52)],
-        ),
-        border: Border.all(color: const Color(0xFF3d5a80)),
+        gradient: isCurrentTurn ? highlightGradient : baseGradient,
+        border: Border.all(color: borderColor, width: isCurrentTurn ? 2 : 1),
+        boxShadow: [
+          if (isCurrentTurn)
+            BoxShadow(
+              color: glowColor,
+              blurRadius: 12 * layout.scale,
+              spreadRadius: 1,
+            ),
+        ],
       ),
       child: Row(
         children: [
@@ -420,10 +438,36 @@ class _GameScreenState extends State<GameScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    displayName,
-                    style: TextStyle(color: textColor, fontSize: layout.fontSize * 0.9),
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        displayName,
+                        style: TextStyle(color: textColor, fontSize: layout.fontSize * 0.9),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (isCurrentTurn) ...[
+                        const SizedBox(width: 4),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 4 * layout.scale,
+                            vertical: 1.5 * layout.scale,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFffd700),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '出牌中',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: layout.fontSize * 0.55,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   Text(
                     '剩${cardsNum}张',
@@ -456,18 +500,20 @@ class _GameScreenState extends State<GameScreen> {
     _GameLayoutParams layout,
     bool alignLeft,
     Color textColor,
+    bool isCurrentTurn,
   ) {
     return Positioned(
       left: alignLeft ? x : null,
       right: alignLeft ? null : x,
       top: y,
-      child: _buildPlayerInfoCardContent(name, cardsNum, score, layout, textColor),
+      child: _buildPlayerInfoCardContent(name, cardsNum, score, layout, textColor, isCurrentTurn),
     );
   }
 
   Widget _buildTopPlayer(FieldInfo info, _GameLayoutParams layout, double width, Color textColor) {
     final cid = info.clientId;
     final topId = (cid + _posTop) % 6;
+    final isCurrentTurn = info.nowPlayer == topId;
     final name = info.userNames[topId];
     final cardsNum = info.usersCardsNum[topId];
     final score = info.userScores[topId];
@@ -503,7 +549,14 @@ class _GameScreenState extends State<GameScreen> {
           Positioned(
             left: layout.horizontalInfoSectionMargin,
             top: topInfoY,
-            child: _buildPlayerInfoCardContent(name, cardsNum, score, layout, textColor),
+            child: _buildPlayerInfoCardContent(
+              name,
+              cardsNum,
+              score,
+              layout,
+              textColor,
+              isCurrentTurn,
+            ),
           ),
         ],
       ),
@@ -587,6 +640,7 @@ class _GameScreenState extends State<GameScreen> {
           layout,
           true,
           textColor,
+          info.nowPlayer == nwId,
         ),
         _buildPlayerInfoCard(
           info.userNames[swId],
@@ -597,6 +651,7 @@ class _GameScreenState extends State<GameScreen> {
           layout,
           true,
           textColor,
+          info.nowPlayer == swId,
         ),
         // 左侧牌背 + 已出牌
         _buildSideCardBack(layout.horizontalCardMarginSide, layout.upperCardY, true, layout),
@@ -622,6 +677,7 @@ class _GameScreenState extends State<GameScreen> {
           layout,
           false,
           textColor,
+          info.nowPlayer == neId,
         ),
         _buildPlayerInfoCard(
           info.userNames[seId],
@@ -632,6 +688,7 @@ class _GameScreenState extends State<GameScreen> {
           layout,
           false,
           textColor,
+          info.nowPlayer == seId,
         ),
         _buildSideCardBack(layout.horizontalCardMarginSide, layout.upperCardY, false, layout),
         _buildSideCardBack(layout.horizontalCardMarginSide, layout.lowerCardY, false, layout),
@@ -685,6 +742,7 @@ class _GameScreenState extends State<GameScreen> {
           layout,
           true,
           textColor,
+          info.nowPlayer == cid,
         ),
         // 手牌在 info section 右侧，中心水平对齐
         Positioned(
