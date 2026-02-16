@@ -172,6 +172,22 @@ class _GameScreenState extends State<GameScreen> {
     setState(() => _selected[index] = !_selected[index]);
   }
 
+  /// 双击某张手牌时：选中所有与该牌点数相同的手牌
+  void _onCardDoubleTap(int index) {
+    if (_info == null) return;
+    if (index < 0 || index >= _info!.clientCards.length) return;
+    if (_selected.length != _info!.clientCards.length) return;
+
+    final targetValue = _info!.clientCards[index].value;
+    setState(() {
+      for (var i = 0; i < _info!.clientCards.length; i++) {
+        if (_info!.clientCards[i].value == targetValue) {
+          _selected[i] = true;
+        }
+      }
+    });
+  }
+
   void _onReset() {
     setState(() {
       for (var i = 0; i < _selected.length; i++) _selected[i] = false;
@@ -653,9 +669,13 @@ class _GameScreenState extends State<GameScreen> {
           textColor,
           info.nowPlayer == swId,
         ),
-        // 左侧牌背 + 已出牌
-        _buildSideCardBack(layout.horizontalCardMarginSide, layout.upperCardY, true, layout),
-        _buildSideCardBack(layout.horizontalCardMarginSide, layout.lowerCardY, true, layout),
+        // 左侧牌背 + 已出牌（该玩家出完牌后，不再显示牌背）
+        info.usersCardsNum[nwId] > 0
+            ? _buildSideCardBack(layout.horizontalCardMarginSide, layout.upperCardY, true, layout)
+            : const SizedBox.shrink(),
+        info.usersCardsNum[swId] > 0
+            ? _buildSideCardBack(layout.horizontalCardMarginSide, layout.lowerCardY, true, layout)
+            : const SizedBox.shrink(),
         _buildSidePlayedCards(info, (cid + _posNw) % 6, layout.upperCardY, layout, true),
         _buildSidePlayedCards(info, (cid + _posSw) % 6, layout.lowerCardY, layout, true),
       ],
@@ -690,8 +710,12 @@ class _GameScreenState extends State<GameScreen> {
           textColor,
           info.nowPlayer == seId,
         ),
-        _buildSideCardBack(layout.horizontalCardMarginSide, layout.upperCardY, false, layout),
-        _buildSideCardBack(layout.horizontalCardMarginSide, layout.lowerCardY, false, layout),
+        info.usersCardsNum[neId] > 0
+            ? _buildSideCardBack(layout.horizontalCardMarginSide, layout.upperCardY, false, layout)
+            : const SizedBox.shrink(),
+        info.usersCardsNum[seId] > 0
+            ? _buildSideCardBack(layout.horizontalCardMarginSide, layout.lowerCardY, false, layout)
+            : const SizedBox.shrink(),
         _buildSidePlayedCards(info, (cid + _posNe) % 6, layout.upperCardY, layout, false),
         _buildSidePlayedCards(info, (cid + _posSe) % 6, layout.lowerCardY, layout, false),
       ],
@@ -782,6 +806,7 @@ class _GameScreenState extends State<GameScreen> {
             top: selected ? -20 : 0,
             child: GestureDetector(
               onTap: () => _onCardTap(i),
+              onDoubleTap: () => _onCardDoubleTap(i),
               child: Image.asset(
                 cardImageAssetPath(card),
                 width: layout.cardWidth,

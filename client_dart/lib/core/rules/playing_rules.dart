@@ -192,6 +192,28 @@ bool _tryTransformCards(
   final triplePairNum = cards.length ~/ 5;
   if (triplePairNum > 12) return (type: CardType.illegalType, keyCard: 0);
 
+  // 特判：无王、牌型为「两连对 + 一个四张」，例如 4455666777，
+  // 也视为飞机（两连三带两对），key 牌取最大点数（这里为 7）。
+  if (jokerNum == 0) {
+    final normalRanks = cardNum.entries
+        .where((e) => e.key >= 3 && e.key <= 15 && e.value > 0)
+        .toList();
+    if (normalRanks.length == 3) {
+      normalRanks.sort((a, b) => a.key.compareTo(b.key));
+      final r0 = normalRanks[0].key;
+      final r1 = normalRanks[1].key;
+      final r2 = normalRanks[2].key;
+      final c0 = normalRanks[0].value;
+      final c1 = normalRanks[1].value;
+      final c2 = normalRanks[2].value;
+      final counts = [c0, c1, c2]..sort();
+      // 三个点数连续，且数量是 {2,2,4}（如 4,4,5,5,6,6,7,7,7,7）
+      if (r1 == r0 + 1 && r2 == r1 + 1 && counts[0] == 2 && counts[1] == 2 && counts[2] == 4) {
+        return (type: CardType.flight, keyCard: r2);
+      }
+    }
+  }
+
   List<int> rg;
   if (cards.last + triplePairNum - 1 > 14) {
     rg = List.generate(triplePairNum, (i) => 14 - i);
