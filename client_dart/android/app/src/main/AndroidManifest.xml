@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 正式版也需要联网打牌，因此在 main 清单中声明网络权限。
+         调试和 profile 清单里已有 INTERNET 权限，但打包 APK 时只会使用 main 清单。 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:label="六家统"
         android:name="${applicationName}"

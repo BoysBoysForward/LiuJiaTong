@@ -2,7 +2,7 @@
 # Run from project root, or cd to test directory and execute
 
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$ip = "127.0.0.1"   # local simulation, change to 192.168.x.x for LAN
+$ip = "192.168.31.63"   # local simulation, change to 192.168.x.x for LAN
 $port = "8081"
 
 Write-Host "LiuJiaTong Simulation Test" -ForegroundColor Cyan

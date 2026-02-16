@@ -16,7 +16,17 @@ class ConfigRepository {
   final String? _basePath;
 
   Future<String> get _path async {
+    // 测试或桌面端可显式指定 basePath，绕过平台目录选择。
     if (_basePath != null) return '$_basePath/$_configFileName';
+
+    // macOS 上应用是沙箱化的，直接写 ~/Documents 会触发 “Operation not permitted”。
+    // 按苹果推荐使用 Application Support 目录存储应用配置。
+    if (Platform.isMacOS) {
+      final dir = await getApplicationSupportDirectory();
+      return '${dir.path}/$_configFileName';
+    }
+
+    // 其他平台保持原行为：使用应用文档目录。
     final dir = await getApplicationDocumentsDirectory();
     return '${dir.path}/$_configFileName';
   }
