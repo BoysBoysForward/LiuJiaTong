@@ -3,16 +3,15 @@ import sys
 import time
 import core.logger as logger
 from logging import Logger
-from cli.card_utils import str_to_int, get_card_count, strs_to_ints, calculate_score, draw_cards
-from cli.terminal_utils import fatal
+from client.card_utils import str_to_int, get_card_count, strs_to_ints, calculate_score, draw_cards
+from client.terminal_utils import fatal
 from enum import Enum, auto
 from core.playingrules import validate_user_input
-from cli.terminal_printer import *
+from client.terminal_printer import *
 from core import sound
 from core.card import Card
 from core.FieldInfo import FieldInfo
-import queue
-from client.gui import card_queue
+
 
 class SpecialInput(Enum):
     left_arrow = auto(),
@@ -269,19 +268,6 @@ def get_legal_user_input_from_cli(
             continue
         return user_input, new_score
 
-def get_leagal_user_input_from_gui() -> tuple[list[Card], int]:
-    while True:
-        try:
-            # 从队列中获取用户选择的卡牌，GUI必须给出一个合法牌型
-            selected_cards = card_queue.get(timeout=1)
-            # 处理用户选择的卡牌
-            if selected_cards == ['F']:
-                return ['F'], 0
-            else:
-                return selected_cards, calculate_score(selected_cards)
-        except queue.Empty:
-            # 如果队列为空，继续等待
-            continue
 
 def _get_simulated_play(
     client_cards: list[Card],
@@ -292,7 +278,7 @@ def _get_simulated_play(
     """模拟模式下由 auto_select_cards 自动选择出牌。"""
     from core.auto_play.strategy import auto_select_cards
     from core.FieldInfo import FieldInfo
-    from cli.card_utils import calculate_score
+    from client.card_utils import calculate_score
 
     # 构造最小 FieldInfo 供 auto_select_cards 使用
     last_played = users_played_cards[last_player] if last_player != client_player else None
@@ -330,7 +316,7 @@ def playing(
     tcp_handler.logger.info("playing")
     tcp_handler.logger.info(f"last played: {users_played_cards[last_player] if last_player != client_player else None}")
 
-    from client.interface import get_interface_type, is_simulation_mode
+    from client.interface import is_simulation_mode
 
     if is_simulation_mode():
         new_played_cards, new_score = _get_simulated_play(
@@ -352,20 +338,12 @@ def playing(
     global g_terminal_handler
     g_terminal_handler = PlayingTerminalHandler()
 
-    interface_type = get_interface_type()
-    tcp_handler.logger.info(f"Interface type: {interface_type}")
-    if interface_type == "CLI":
-        print('请输入要出的手牌(\'F\'表示跳过):')
-        user_input, new_score = get_legal_user_input_from_cli(client_cards, last_player, client_player, users_played_cards, tcp_handler)
-        if user_input == ['F']:
-            new_played_cards = ['F']
-        else:
-            # 返回用户每种牌的前n张
-            # 根据用户输入的字符串，返回用户打出的牌
-            new_played_cards = draw_cards(client_cards, user_input)
+    print('请输入要出的手牌(\'F\'表示跳过):')
+    user_input, new_score = get_legal_user_input_from_cli(client_cards, last_player, client_player, users_played_cards, tcp_handler)
+    if user_input == ['F']:
+        new_played_cards = ['F']
     else:
-        tcp_handler.logger.info("get_leagal_user_input_from_gui")
-        new_played_cards, new_score = get_leagal_user_input_from_gui()
+        new_played_cards = draw_cards(client_cards, user_input)
 
     tcp_handler.logger.info(f"Now play: {new_played_cards}")
     tcp_handler.send_playing_heartbeat(finished=True)

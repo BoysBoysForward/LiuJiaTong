@@ -1,7 +1,7 @@
 import core.logger as logger
-from cli.terminal_utils import error
-from game_vars import gvar
-from state_machine import GameState, GameStateMachine
+from common.console import error
+from server.game_vars import gvar
+from server.state_machine import GameState, GameStateMachine
 
 class Onlooker(GameStateMachine):
     # 私有方法

@@ -1,12 +1,12 @@
 import secrets
 import string
 import core.logger as logger
-from cli.terminal_utils import success, error
-from player import Player
-from onlooker import Onlooker
-from game_vars import gvar
+from common.console import success, error
+from server.player import Player
+from server.onlooker import Onlooker
+from server.game_vars import gvar
 from socketserver import BaseRequestHandler
-from network.my_network_json import recv_data_from_socket, send_data_to_socket
+from core.network.my_network import recv_data_from_socket, send_data_to_socket
 from core.card import Card
 
 class Game_Handler(BaseRequestHandler):

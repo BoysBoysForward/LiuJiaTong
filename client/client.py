@@ -9,10 +9,10 @@ import os
 import logging
 
 import core.logger as logger
-from cli.terminal_utils import user_confirm, error, success, fatal
-from cli.card_utils import last_played
+from client.terminal_utils import user_confirm, error, success, fatal
+from client.card_utils import last_played
 from client.playing_handler import playing
-from network.my_network_json import send_data_to_socket, recv_data_from_socket
+from core.network.my_network import send_data_to_socket, recv_data_from_socket
 from client.interface import main_interface, game_over_interface, waiting_hall_interface
 from core.config import Config, CONFIG_NAME
 from core.card import Card

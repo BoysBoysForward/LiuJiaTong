@@ -1,19 +1,14 @@
 """
-客户端用户接口抽象层：通过消息传递机制通知 UI 更新，不直接依赖 CLI 或 GUI 实现。
+客户端用户接口抽象层：通过消息传递机制通知 UI 更新，不直接依赖 CLI 实现。
 """
-import threading
 from core.sound import playsound, playsounds
 from core.playingrules import judge_and_transform_cards, CardType
 from core.card import Card
 from core.FieldInfo import FieldInfo
-from client.gui import update_gui, init_gui, UIFramework
-from cli.terminal_utils import disable_echo, enable_echo
+from client.terminal_utils import disable_echo, enable_echo
 
 INTERFACE_TYPE = "CLI"
 _MODE_CLI = "CLI"
-_MODE_GUI = "GUI"
-_MODE_GUI_FLET = "GUI_FLET"
-_MODE_GUI_KIVY = "GUI_KIVY"
 
 _ui_handler = None
 _simulation_mode = False
@@ -71,17 +66,6 @@ def main_interface(
 
     if _ui_handler and hasattr(_ui_handler, "on_field_info"):
         _ui_handler.on_field_info(field_info)
-    else:
-        # 回退：直接推送到 GUI（兼容 gui_flet 独立启动等场景）
-        from client.gui import update_gui
-        update_gui(field_info)
-        try:
-            import sys
-            gf = sys.modules.get("gui_flet.gui_flet")
-            if gf is not None and hasattr(gf, "_update_queue"):
-                gf._update_queue.put(field_info)
-        except Exception:
-            pass
 
     _play_sound(
         is_start=is_start,
@@ -153,70 +137,23 @@ def game_over_interface(client_player: int, if_game_over: int) -> None:
             playsound("clap", False, None)
 
 
-def run_client(client, mode: str) -> None:
+def run_client(client, mode: str = None) -> None:
     """
-    根据 mode 启动客户端并运行游戏，负责接口类型设置、GUI 初始化及连接/运行逻辑。
-    mode: "CLI" | "GUI" | "GUI_FLET" | "GUI_KIVY"
+    启动客户端并运行游戏（仅支持 CLI）。mode 参数保留兼容，非 CLI 时回退到 CLI。
     """
     mode = (mode or _MODE_CLI).upper()
-    if mode not in (_MODE_CLI, _MODE_GUI, _MODE_GUI_FLET, _MODE_GUI_KIVY):
+    if mode != _MODE_CLI:
         client.logger.warning("未知 mode %r，回退到 CLI", mode)
         mode = _MODE_CLI
 
-    if mode == _MODE_CLI:
-        from cli.interface_cli import create_cli_handler
-        from core.sound import playsound
-        set_ui_handler(create_cli_handler(playsound))
-    elif mode in (_MODE_GUI, _MODE_GUI_FLET, _MODE_GUI_KIVY):
-        set_ui_handler(_create_gui_handler())
+    from client.interface_cli import create_cli_handler
+    from core.sound import playsound
+    set_ui_handler(create_cli_handler(playsound))
+    set_interface_type("CLI")
+    client.logger.info("启动命令行模式")
 
-    def _do_run():
-        client.connect(client.config.ip, client.config.port)
-        disable_echo()
-        client.run()
-        enable_echo()
-        client.close()
-
-    if mode == _MODE_GUI:
-        client.logger.info("启动GUI模式 (tkinter)")
-        set_interface_type("GUI")
-        init_gui(client.logger, UIFramework.TKINTER)
-        _do_run()
-    elif mode == _MODE_GUI_FLET:
-        client.logger.info("启动GUI模式 (flet)")
-        set_interface_type("GUI")
-        init_gui(client.logger, UIFramework.FLET, client=client)
-    elif mode == _MODE_GUI_KIVY:
-        client.logger.info("启动GUI模式 (kivy)")
-        set_interface_type("GUI")
-        init_gui(client.logger, UIFramework.KIVY, client=client)
-    else:
-        client.logger.info("启动命令行模式")
-        _do_run()
-
-
-def _create_gui_handler():
-    """创建 GUI 端处理器：将 on_field_info 转发给 update_gui。"""
-
-    class GUIHandler:
-        def on_waiting_hall(self, users_name, users_error):
-            pass  # GUI 由自身流程处理等待大厅
-
-        def on_field_info(self, field_info):
-            update_gui(field_info)
-            try:
-                import sys
-                gf = sys.modules.get("gui_flet.gui_flet")
-                if gf is not None and hasattr(gf, "_update_queue"):
-                    gf._update_queue.put(field_info)
-                gk = sys.modules.get("gui_kivy.gui_kivy")
-                if gk is not None and hasattr(gk, "_update_queue"):
-                    gk._update_queue.put(field_info)
-            except Exception:
-                pass
-
-        def on_game_over(self, client_player: int, if_game_over: int):
-            from core.sound import playsound
-            playsound("clap", False, None)
-
-    return GUIHandler()
+    client.connect(client.config.ip, client.config.port)
+    disable_echo()
+    client.run()
+    enable_echo()
+    client.close()

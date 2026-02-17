@@ -8,7 +8,7 @@ sys.path.insert(0, _project_root)
 if _client_dir not in sys.path:
     sys.path.insert(0, _client_dir)
 
-from cli.terminal_utils import check_packages, fatal, register_signal_handler
+from client.terminal_utils import check_packages, fatal, register_signal_handler
 check_packages({
     "nt": [
         ("win32api", "pypiwin32"),
@@ -16,7 +16,10 @@ check_packages({
     ],
 })
 from core import sound
-sound.check_sound_player()
+try:
+    sound.check_sound_player()
+except sound.SoundEnvironmentError as e:
+    fatal(str(e))
 
 import core.logger as logger
 from client.client import Client
@@ -33,7 +36,6 @@ if __name__ == "__main__":
     parser.add_argument("--ip", type=str, help="ip address")
     parser.add_argument("--port", type=int, help="port")
     parser.add_argument("--user-name", type=str, help="user name")
-    parser.add_argument("--mode", type=str, default="CLI", help="mode: CLI, GUI, GUI_FLET, or GUI_KIVY")
     parser.add_argument("-n", "--no-cookie", action="store_true", default=False, help="disable cookies")
     parser.add_argument("-s", "--simulate", action="store_true", default=False,
                         help="simulation mode: auto play/skip without user input")
@@ -51,4 +53,4 @@ if __name__ == "__main__":
         client.config = Config(args.ip, args.port, args.user_name)
         client.init_logger()
 
-    run_client(client, args.mode)
+    run_client(client)

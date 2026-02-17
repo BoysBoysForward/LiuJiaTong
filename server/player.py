@@ -1,9 +1,9 @@
 import time
 import core.logger as logger
-from cli.terminal_utils import error, warn, success
-from cli.card_utils import cards_to_strs
-from game_vars import gvar
-from state_machine import GameState, GameStateMachine
+from common.console import error, warn, success
+from common.card_io import cards_to_strs
+from server.game_vars import gvar
+from server.state_machine import GameState, GameStateMachine
 
 class Player(GameStateMachine):
     # 私有方法

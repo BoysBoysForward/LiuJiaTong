@@ -2,16 +2,15 @@ import os
 import sys
 
 _project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_server_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _project_root)
-sys.path.insert(0, _server_dir)
+
 from server.game_handler import Game_Handler
 from server.manager import Manager
 import core.logger as logger
 import threading
 import argparse
-from network.my_network import ReusableTCPServer
-from cli.terminal_utils import check_packages, user_confirm, fatal, register_signal_handler
+from core.network.my_network import ReusableTCPServer
+from common.console import check_packages, user_confirm, fatal, register_signal_handler
 check_packages({
     "nt": [
         ("win32api", "pypiwin32"),

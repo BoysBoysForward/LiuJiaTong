@@ -1,6 +1,6 @@
 import random
 import threading
-from state_machine import GameState
+from server.state_machine import GameState
 from core.card import Card
 
 class Game_Var:

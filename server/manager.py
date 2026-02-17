@@ -4,8 +4,8 @@ import threading
 import core.logger as logger
 
 from core import card
-from game_vars import gvar
-from state_machine import GameState, GameStateMachine
+from server.game_vars import gvar
+from server.state_machine import GameState, GameStateMachine
 
 
 # 初始化牌

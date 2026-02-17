@@ -2,22 +2,28 @@ import os
 import threading
 import platform
 import subprocess
-from cli.terminal_utils import fatal
 
 
-def check_sound_player():
+class SoundEnvironmentError(RuntimeError):
+    """音效环境不可用时由 check_sound_player 抛出，由调用方决定是否退出。"""
+    pass
+
+
+def check_sound_player() -> None:
     """
     检查当前平台是否具备播放音效的能力。
     - macOS: 需要 afplay
     - Linux: 需要 aplay
     - Windows: 使用标准库 winsound，无需额外依赖
+
+    若环境不满足则抛出 SoundEnvironmentError，由调用方捕获后决定退出或提示。
     """
 
-    def __checker(cmd: list[str], obj: str):
+    def __checker(cmd: list[str], obj: str) -> None:
         try:
             subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
         except Exception:
-            fatal(f'This game needs "{obj}" to play sound, please install it')
+            raise SoundEnvironmentError(f'This game needs "{obj}" to play sound, please install it')
 
     system = platform.system()
     if system == "Darwin":
@@ -25,11 +31,12 @@ def check_sound_player():
     elif system == "Linux":
         __checker(["aplay"], "aplay")
     elif system == "Windows":
-        # winsound 是标准库，不额外检查外部程序，若导入失败则直接报错
         try:
             import winsound  # noqa: F401
         except Exception:
-            fatal('This game needs "winsound" (Python standard lib) to play sound on Windows.')
+            raise SoundEnvironmentError(
+                'This game needs "winsound" (Python standard lib) to play sound on Windows.'
+            )
     else:
         raise RuntimeError("Unknown os")
 
